@@ -1,3 +1,5 @@
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -6,26 +8,33 @@ import java.net.Socket;
  */
 public class Server {
 
-    private final static int SERVER_PORT = 1500;
+    private final static int SERVER_PORT = 8080;
     private ServerSocket serverSocket;
+    Socket socket;
 
     public static void main(String[] args)
     {
         new Server().run();
     }
 
+    public Server()
+    {
+    }
 
     public void run() {
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
+            System.out.println("Waiting for connection on port " + SERVER_PORT + "...");
             while (true) {
-                System.out.println("Waiting for connection...");
-                Socket socket = serverSocket.accept();
+                socket = serverSocket.accept();
+                if (socket != null) {
+                    RequestHandler handler = new RequestHandler(socket);
+                    handler.run();
+                }
             }
         }
-        catch (Exception e) {
-            System.out.println("Exception: " + e.getMessage());
+        catch (IOException ioe) {
+            System.out.println("Exception: " + ioe.getMessage());
         }
     }
-
 }
