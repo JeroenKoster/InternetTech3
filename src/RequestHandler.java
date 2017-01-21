@@ -7,7 +7,7 @@ import java.util.StringTokenizer;
  */
 public class RequestHandler extends Thread {
 
-    private final static String folderLocation = "src" + File.separator + "html";
+    private final static String HTML_FOLDER_LOCATION = "src" + File.separator + "view" + File.separator + "html";
     private Socket socket;
 
     public RequestHandler(Socket socket)
@@ -58,15 +58,15 @@ public class RequestHandler extends Thread {
     }
 
     /**(
-     * Returns the html-code of a html page as a single String.
-     * @param pageName (in the form of "X.html")
+     * Returns the view-code of a view page as a single String.
+     * @param pageName (in the form of "X.view")
      * @return HTML as String
      */
     public String htmlToString(String pageName) {
         StringBuilder builder = new StringBuilder();
         String s;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(folderLocation + pageName));
+            BufferedReader reader = new BufferedReader(new FileReader(HTML_FOLDER_LOCATION + pageName));
             while((s = reader.readLine()) != null) {
                 builder.append(s);
             }
