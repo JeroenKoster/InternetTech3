@@ -1,5 +1,8 @@
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
+import java.util.Arrays;
 import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.StringTokenizer;
@@ -12,20 +15,24 @@ public class RequestHandler extends Thread {
     private final static String HTML_FOLDER_LOCATION = "src" + File.separator + "view" + File.separator + "html" + File.separator;
     private Socket socket;
     private Boolean authorized;
+    DataOutputStream dos;
 
     public RequestHandler(Socket socket) {
         this.socket = socket;
+        try {
+
+            dos = new DataOutputStream(socket.getOutputStream());
+        }catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override
     public void run() {
 
         System.out.println("Start of requesthandler.run");
-
         try {
-
             InputStreamReader isr = new InputStreamReader(socket.getInputStream());
-            PrintWriter writer = new PrintWriter(socket.getOutputStream());
             BufferedReader r = new BufferedReader(isr);
             String line = r.readLine();
             String authToken = "";
@@ -59,8 +66,8 @@ public class RequestHandler extends Thread {
                         authsb.append("HTTP/1.1 401\r\n");
                         authsb.append("WWW-Authenticate: Basic auth=\"test\"\r\n\r\n");
                         authsb.append("<h1> UnAuthorized <h1>");
-                        writer.write(authsb.toString());
-                        writer.flush();
+                        dos.writeUTF(authsb.toString());
+                        dos.flush();
                     }else{  //he was authorized show file he requested
                         getFile(fileName);
                     }
@@ -98,36 +105,55 @@ public class RequestHandler extends Thread {
     }
 
     public void getFile(String fileName) {
-
-        if (fileName.endsWith(".html")) {
-            try {
-                StringBuilder response = new StringBuilder();
-                response.append("HTTP/1.1 200 OK\r\n\r\n");
+        try {
+            StringBuilder response = new StringBuilder();
+            response.append("HTTP/1.1 200 OK\r\n\r\n");
+            if(fileName.endsWith(".html")) {
                 response.append(htmlToString(fileName));
-                PrintWriter writer = new PrintWriter(socket.getOutputStream());
-                writer.write(response.toString());
-                writer.flush();
-                writer.close();
-            } catch (IOException ioe) {
-                System.out.println(ioe.getMessage());
+                dos.writeUTF(response.toString());
             }
+            else if(fileName.toLowerCase().endsWith(".jpg") ||
+                    fileName.toLowerCase().endsWith(".jpeg"))
+            {
+                BufferedImage bimg = ImageIO.read(new File(HTML_FOLDER_LOCATION+fileName));
+                //writeImageToOutput(fileName);
+//                ImageIO.write(bimg, "JPG", dos);
+            }
+        } catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
         }
-
     }
 
-    /**
-     * (
+    public void writeImageToOutput(String filename)
+    {
+        FileInputStream fis;
+        try {
+            fis = new FileInputStream(new File(HTML_FOLDER_LOCATION + filename));
+            byte[] buffer = new byte[1024];
+            int len = 0;
+            while ((len = fis.read(buffer)) != -1) {
+                dos.write(buffer, 0, len);
+            }
+            fis.close();
+            dos.flush();
+            dos.close();
+
+        } catch (IOException ioe) {
+            System.out.println(ioe.getMessage());
+        }
+    }
+
+    /**(
      * Returns the html-code of a html page as a single String.
-     *
-     * @param pageName (in the form of "X.html")
-     * @return HTML as Stringd
+     * @param fileName (in the form of "X.html")
+     * @return HTML as String
      */
-    public String htmlToString(String pageName) {
+    public String htmlToString(String fileName) {
         StringBuilder builder = new StringBuilder();
         String s;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(HTML_FOLDER_LOCATION + pageName));
-            while ((s = reader.readLine()) != null) {
+            BufferedReader reader = new BufferedReader(new FileReader(HTML_FOLDER_LOCATION + fileName));
+            while((s = reader.readLine()) != null) {
                 builder.append(s);
             }
             reader.close();
