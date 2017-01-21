@@ -1,8 +1,5 @@
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
 import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.StringTokenizer;
@@ -12,16 +9,22 @@ import java.util.StringTokenizer;
  */
 public class RequestHandler extends Thread {
 
-    private final static String HTML_FOLDER_LOCATION = "src" + File.separator + "view" + File.separator + "html" + File.separator;
+    public static int counter = 1;
+    public int threadNumber;
+    private final static String HTML_FOLDER_LOCATION = "src" + File.separator + "view" + File.separator + "html";
     private Socket socket;
     private Boolean authorized;
+    OutputStream os;
     DataOutputStream dos;
 
     public RequestHandler(Socket socket) {
         this.socket = socket;
+        this.threadNumber = counter;
+        counter++;
         try {
 
-            dos = new DataOutputStream(socket.getOutputStream());
+            os = socket.getOutputStream();
+            dos = new DataOutputStream(os);
         }catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -30,7 +33,7 @@ public class RequestHandler extends Thread {
     @Override
     public void run() {
 
-        System.out.println("Start of requesthandler.run");
+        System.out.println("Start of requesthandler.run(thread " + threadNumber + ")");
         try {
             InputStreamReader isr = new InputStreamReader(socket.getInputStream());
             BufferedReader r = new BufferedReader(isr);
@@ -50,7 +53,7 @@ public class RequestHandler extends Thread {
                 //get the filename
                 String fileName = st.nextToken();
                 //find htaccess file at file location
-                File htaccess = findHtaccess((HTML_FOLDER_LOCATION+ fileName).split("/"));
+                File htaccess = findHtaccess((HTML_FOLDER_LOCATION + fileName).split("/"));
                 if (htaccess != null) { //theres a htaccess file, requires authenticating before able to view page
                     authorized = false;
                     //if authtoken not set, definitely unauthorized
@@ -115,9 +118,10 @@ public class RequestHandler extends Thread {
             else if(fileName.toLowerCase().endsWith(".jpg") ||
                     fileName.toLowerCase().endsWith(".jpeg"))
             {
-                BufferedImage bimg = ImageIO.read(new File(HTML_FOLDER_LOCATION+fileName));
-                //writeImageToOutput(fileName);
-//                ImageIO.write(bimg, "JPG", dos);
+                response.append("Content-Type: image/jpeg\r\n");
+                dos.writeUTF(response.toString());
+                System.out.println("Response toString: " + response.toString());
+                writeImageToOutput(fileName);
             }
         } catch (IOException ioe) {
             System.out.println(ioe.getMessage());
@@ -126,20 +130,23 @@ public class RequestHandler extends Thread {
 
     public void writeImageToOutput(String filename)
     {
+        byte[] byteArray = new byte[8192];
         FileInputStream fis;
         try {
-            fis = new FileInputStream(new File(HTML_FOLDER_LOCATION + filename));
-            byte[] buffer = new byte[1024];
-            int len = 0;
-            while ((len = fis.read(buffer)) != -1) {
-                dos.write(buffer, 0, len);
+            File file = new File("src/view" + filename);
+            fis = new FileInputStream(file);
+            int i;
+            System.out.println(byteArray.length);
+            dos.writeInt(byteArray.length);
+            while((i=fis.read(byteArray)) > 0) {
+                dos.write(byteArray, 0, i);
             }
             fis.close();
             dos.flush();
             dos.close();
 
         } catch (IOException ioe) {
-            System.out.println(ioe.getMessage());
+            ioe.printStackTrace();
         }
     }
 
