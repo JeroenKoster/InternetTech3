@@ -58,9 +58,9 @@ public class RequestHandler extends Thread {
     }
 
     /**(
-     * Returns the view-code of a view page as a single String.
-     * @param pageName (in the form of "X.view")
-     * @return HTML as String
+     * Returns the html-code of a html page as a single String.
+     * @param pageName (in the form of "X.html")
+     * @return HTML as Stringd
      */
     public String htmlToString(String pageName) {
         StringBuilder builder = new StringBuilder();
