@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -10,16 +9,14 @@ public class Server {
 
     private final static int SERVER_PORT = 8080;
     private ServerSocket serverSocket;
-    Socket socket;
+    private Socket socket;
+
 
     public static void main(String[] args)
     {
         new Server().run();
     }
 
-    public Server()
-    {
-    }
 
     public void run() {
         try {
