@@ -1,3 +1,7 @@
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -118,9 +122,7 @@ public class RequestHandler extends Thread {
             else if(fileName.toLowerCase().endsWith(".jpg") ||
                     fileName.toLowerCase().endsWith(".jpeg"))
             {
-                response.append("Content-Type: image/jpeg\r\n");
-                dos.writeUTF(response.toString());
-                System.out.println("Response toString: " + response.toString());
+
                 writeImageToOutput(fileName);
             }
         } catch (IOException ioe) {
@@ -128,26 +130,21 @@ public class RequestHandler extends Thread {
         }
     }
 
-    public void writeImageToOutput(String filename)
-    {
-        byte[] byteArray = new byte[8192];
-        FileInputStream fis;
-        try {
-            File file = new File("src/view" + filename);
-            fis = new FileInputStream(file);
-            int i;
-            System.out.println(byteArray.length);
-            dos.writeInt(byteArray.length);
-            while((i=fis.read(byteArray)) > 0) {
-                dos.write(byteArray, 0, i);
-            }
-            fis.close();
-            dos.flush();
-            dos.close();
+    public void writeImageToOutput(String filename) throws IOException {
+        File file = new File("src/view"+filename);
+        FileInputStream fis = new FileInputStream(file);
+        byte[] data = new byte[(int) file.length()];
+        fis.read(data);
+        fis.close();
 
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
+        DataOutputStream binaryOut = new DataOutputStream(socket.getOutputStream());
+        binaryOut.writeBytes("HTTP/1.0 200 OK\r\n");
+        binaryOut.writeBytes("Content-Type: image/png\r\n");
+        binaryOut.writeBytes("Content-Length: " + data.length);
+        binaryOut.writeBytes("\r\n\r\n");
+        binaryOut.write(data);
+
+        binaryOut.close();
     }
 
     /**(
