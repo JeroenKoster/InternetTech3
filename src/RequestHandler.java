@@ -22,7 +22,6 @@ public class RequestHandler extends Thread {
         this.threadNumber = counter;
         counter++;
         try {
-
             os = socket.getOutputStream();
             dos = new DataOutputStream(os);
         }catch (Exception e) {
@@ -130,21 +129,22 @@ public class RequestHandler extends Thread {
 
     public void writeImageToOutput(String filename)
     {
-        byte[] byteArray = new byte[8192];
+        byte[] byteArray;
         FileInputStream fis;
         try {
             File file = new File("src/view" + filename);
             fis = new FileInputStream(file);
+            byteArray = new byte[(int)file.length()];
             int i;
-            System.out.println(byteArray.length);
-            dos.writeInt(byteArray.length);
+            dos.writeInt((int)file.length());
             while((i=fis.read(byteArray)) > 0) {
                 dos.write(byteArray, 0, i);
             }
+            System.out.println("filesize: " + file.length());
+            System.out.println("bytearraysize: " + byteArray.length);
             fis.close();
             dos.flush();
             dos.close();
-
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
