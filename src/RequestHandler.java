@@ -117,9 +117,7 @@ public class RequestHandler extends Thread {
             else if(fileName.toLowerCase().endsWith(".jpg") ||
                     fileName.toLowerCase().endsWith(".jpeg"))
             {
-                response.append("Content-Type: image/jpeg\r\n");
-                dos.writeUTF(response.toString());
-                System.out.println("Response toString: " + response.toString());
+
                 writeImageToOutput(fileName);
             }
         } catch (IOException ioe) {
@@ -127,28 +125,23 @@ public class RequestHandler extends Thread {
         }
     }
 
-    public void writeImageToOutput(String filename)
-    {
-        byte[] byteArray;
-        FileInputStream fis;
-        try {
-            File file = new File("src/view" + filename);
-            fis = new FileInputStream(file);
-            byteArray = new byte[(int)file.length()];
-            int i;
-            dos.writeInt((int)file.length());
-            while((i=fis.read(byteArray)) > 0) {
-                dos.write(byteArray, 0, i);
-            }
-            System.out.println("filesize: " + file.length());
-            System.out.println("bytearraysize: " + byteArray.length);
-            fis.close();
-            dos.flush();
-            dos.close();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
+    public void writeImageToOutput(String filename) throws IOException {
+        File file = new File("src/view"+filename);
+        FileInputStream fis = new FileInputStream(file);
+        byte[] data = new byte[(int) file.length()];
+        fis.read(data);
+        fis.close();
+
+        DataOutputStream binaryOut = new DataOutputStream(socket.getOutputStream());
+        binaryOut.writeBytes("HTTP/1.0 200 OK\r\n");
+        binaryOut.writeBytes("Content-Type: image/png\r\n");
+        binaryOut.writeBytes("Content-Length: " + data.length);
+        binaryOut.writeBytes("\r\n\r\n");
+        binaryOut.write(data);
+
+        binaryOut.close();
     }
+
 
     /**(
      * Returns the html-code of a html page as a single String.
