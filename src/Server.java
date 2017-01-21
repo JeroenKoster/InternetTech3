@@ -27,10 +27,8 @@ public class Server {
             System.out.println("Waiting for connection on port " + SERVER_PORT + "...");
             while (true) {
                 socket = serverSocket.accept();
-                if (socket != null) {
-                    RequestHandler handler = new RequestHandler(socket);
-                    handler.run();
-                }
+                Thread t = new RequestHandler(socket);
+                t.start();
             }
         }
         catch (IOException ioe) {

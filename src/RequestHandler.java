@@ -60,7 +60,7 @@ public class RequestHandler extends Thread {
     /**(
      * Returns the html-code of a html page as a single String.
      * @param pageName (in the form of "X.html")
-     * @return HTML as String
+     * @return HTML as Stringd
      */
     public String htmlToString(String pageName) {
         StringBuilder builder = new StringBuilder();
