@@ -55,6 +55,9 @@ public class RequestHandler extends Thread {
                     && st.hasMoreElements()) {
                 //get the filename
                 String fileName = st.nextToken();
+                if(fileName.equals("/")){
+                    fileName += "index.html";
+                }
                 //find htaccess file at file location
                 File htaccess = findHtaccess((HTML_FOLDER_LOCATION + fileName).split("/"));
                 if (htaccess != null) { //theres a htaccess file, requires authenticating before able to view page
