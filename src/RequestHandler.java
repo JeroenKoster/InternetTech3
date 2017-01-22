@@ -15,7 +15,7 @@ public class RequestHandler extends Thread {
 
     public static int counter = 1;
     public int threadNumber;
-    private final static String HTML_FOLDER_LOCATION = "src" + File.separator + "view" + File.separator + "html";
+    private final static String HTML_FOLDER_LOCATION = "src" + File.separator + "view" + File.separator + "html" +File.separator;
     private Socket socket;
     private Boolean authorized;
     OutputStream os;
@@ -80,6 +80,7 @@ public class RequestHandler extends Thread {
                     }
                 } else {//No htaccess found this file is allowed to be visited without login
                     getFile(fileName);
+                    System.out.println("No htaccess");
                 }
             }
         } catch (IOException ioe) {
@@ -93,7 +94,6 @@ public class RequestHandler extends Thread {
      * @param authToken
      */
     public void authUser(File htaccessFile, String authToken) {
-        System.out.println("how many times is this run");
         String credentials = new String(Base64.getDecoder().decode(authToken),
                 Charset.forName("UTF-8"));
         BufferedReader br;
@@ -115,14 +115,14 @@ public class RequestHandler extends Thread {
         try {
             StringBuilder response = new StringBuilder();
             response.append("HTTP/1.1 200 OK\r\n\r\n");
-            if(fileName.endsWith(".html")) {
+            if(fileName.endsWith(".html") || fileName.endsWith(".css") || fileName.endsWith(".js")) {
                 response.append(htmlToString(fileName));
                 dos.writeUTF(response.toString());
+                dos.close();
             }
             else if(fileName.toLowerCase().endsWith(".jpg") ||
-                    fileName.toLowerCase().endsWith(".jpeg"))
-            {
-
+                    fileName.toLowerCase().endsWith(".jpeg") ||
+                    fileName.toLowerCase().endsWith(".png")) {
                 writeImageToOutput(fileName);
             }
         } catch (IOException ioe) {
@@ -131,7 +131,7 @@ public class RequestHandler extends Thread {
     }
 
     public void writeImageToOutput(String filename) throws IOException {
-        File file = new File("src/view"+filename);
+        File file = new File("src/view/html"+filename);
         FileInputStream fis = new FileInputStream(file);
         byte[] data = new byte[(int) file.length()];
         fis.read(data);
@@ -139,11 +139,10 @@ public class RequestHandler extends Thread {
 
         DataOutputStream binaryOut = new DataOutputStream(socket.getOutputStream());
         binaryOut.writeBytes("HTTP/1.0 200 OK\r\n");
-        binaryOut.writeBytes("Content-Type: image/png\r\n");
+        binaryOut.writeBytes("Content-Type: image/jpg\r\n");
         binaryOut.writeBytes("Content-Length: " + data.length);
         binaryOut.writeBytes("\r\n\r\n");
         binaryOut.write(data);
-
         binaryOut.close();
     }
 
@@ -158,7 +157,7 @@ public class RequestHandler extends Thread {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(HTML_FOLDER_LOCATION + fileName));
             while((s = reader.readLine()) != null) {
-                builder.append(s);
+                builder.append(s+"\r\n");
             }
             reader.close();
         } catch (IOException ioe) {
@@ -179,7 +178,6 @@ public class RequestHandler extends Thread {
             File newFile = new File(path + "/" + ".htaccess");
 
             if (newFile.exists()) {
-                System.out.println("found "+newFile);
                 return newFile;
             }
         }
