@@ -26,7 +26,6 @@ public class RequestHandler extends Thread {
         this.threadNumber = counter;
         counter++;
         try {
-
             os = socket.getOutputStream();
             dos = new DataOutputStream(os);
         }catch (Exception e) {
