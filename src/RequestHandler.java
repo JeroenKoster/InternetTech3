@@ -1,7 +1,3 @@
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.awt.image.WritableRaster;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -79,10 +75,12 @@ public class RequestHandler extends Thread {
                         dos.flush();
                     }else{  //he was authorized show file he requested
                         getFile(fileName);
+                        socket.close();
                     }
                 } else {//No htaccess found this file is allowed to be visited without login
                     getFile(fileName);
                     System.out.println("No htaccess");
+                    socket.close();
                 }
             }
         } catch (IOException ioe) {
